@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dolcenola — Pilotage Achats</title>
+<style>
+:root {
+  --bg:#FAF8F5; --white:#fff; --charcoal:#2C2C2C; --mid:#6B6560;
+  --light:#A09890; --border:#E4DED6;
+  --gold:#C09A5C; --gold-bg:#F5EFE4; --gold-dark:#8C6A30;
+  --green:#4A7C59; --green-bg:#EBF4EF;
+  --orange:#C07A30; --orange-bg:#FDF3E7;
+  --red:#A63C3C; --red-bg:#FAEAEA;
+  --blue:#2D6099; --blue-bg:#EBF2FA;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Calibri,Arial,sans-serif;background:var(--bg);color:var(--charcoal);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* APP SHELL */
+.app-header{background:var(--charcoal);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.app-header h1{font-size:15px;letter-spacing:3px;font-weight:normal;text-transform:uppercase;}
+.app-header .sub{font-family:Arial,sans-serif;font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1.5px;text-transform:uppercase;}
+.tab-nav{background:var(--white);border-bottom:2px solid var(--border);padding:0 20px;display:flex;gap:0;flex-shrink:0;}
+.tab-btn{font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:13px 18px;border:none;background:none;cursor:pointer;color:var(--light);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab-btn:hover{color:var(--gold);}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-panel{display:none;flex:1;overflow-y:auto;padding:20px 24px;}
+.tab-panel.active{display:block;}
+.mw{max-width:1600px;margin:0 auto;}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:18px 22px;margin-bottom:14px;}
+.ct{font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+
+/* FORMS */
+.field{display:flex;flex-direction:column;gap:5px;}
+.lbl{font-family:Arial,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mid);}
+input,select,textarea{font-family:Calibri,Arial,sans-serif;font-size:13px;color:var(--charcoal);border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:var(--white);outline:none;transition:border-color .15s;}
+input:focus,select:focus{border-color:var(--gold);}
+input[type=number]{text-align:right;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.treso-cell:hover{background:var(--gold-bg)!important;}
+.sm{width:110px!important;padding:5px 7px!important;font-size:12px!important;}
+.md{width:130px!important;}
+
+/* LAYOUT HELPERS */
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;}
+.sep{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.text-mid{color:var(--mid);font-family:Arial,sans-serif;font-size:11px;}
+.text-light{color:var(--light);font-family:Arial,sans-serif;font-size:11px;}
+.g{color:var(--green);}.r-col{color:var(--red);}.o{color:var(--orange);}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{font-family:Arial,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--light);padding:7px 11px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;background:var(--bg);}
+.tbl th.r{text-align:right;}
+.tbl td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.r{text-align:right;}
+.tfoot-row td{background:var(--gold-bg)!important;font-weight:bold;border-top:2px solid var(--border)!important;font-family:Arial,sans-serif;font-size:11px;}
+.src-tag{display:inline-block;font-family:Arial,sans-serif;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px;margin:1px 2px 1px 0;color:var(--mid);}
+.warn-txt{font-family:Arial,sans-serif;font-size:10px;color:var(--orange);font-weight:700;}
+
+/* BADGES */
+.badge{display:inline-block;font-family:Arial,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.b-red{background:var(--red);color:#fff;}
+.b-orange{background:var(--orange);color:#fff;}
+.b-yellow{background:#8A7200;color:#fff;}
+.b-green{background:var(--green);color:#fff;}
+.b-light{background:var(--border);color:var(--mid);}
+.b-klarna{background:#17120e;color:#FFB3C7;font-size:8px;letter-spacing:.5px;}
+
+/* BUTTONS */
+.btn{font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border:none;border-radius:6px;padding:7px 13px;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.btn:hover{opacity:.82;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-out{background:transparent;border:1px solid var(--border);color:var(--mid);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #EAB0B0;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+
+/* TOGGLE */
+.toggle{position:relative;display:inline-block;width:34px;height:18px;cursor:pointer;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:18px;transition:.2s;}
+.tslider:before{content:'';position:absolute;width:12px;height:12px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked+.tslider{background:var(--green);}
+.toggle input:checked+.tslider:before{transform:translateX(16px);}
+
+/* PRODUCT ACCORDION */
+.pa{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:9px;}
+.pa-h{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--gold-bg);gap:12px;}
+.pa-name{font-size:14px;font-weight:bold;display:flex;align-items:center;gap:7px;}
+.pa-qty{display:flex;align-items:center;gap:7px;}
+.pa-body{background:var(--bg);border-top:1px solid var(--border);padding:10px 16px;display:none;}
+.pa-body.open{display:block;}
+
+/* SUPPLIER ROWS */
+.sr{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px;}
+.sr-h{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--white);gap:10px;cursor:pointer;}
+.sr-name{font-weight:bold;font-size:14px;}
+.sr-body{background:var(--bg);padding:16px;border-top:1px solid var(--border);display:none;}
+.sr-body.open{display:block;}
+.item-box{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:13px;margin-bottom:9px;}
+
+/* TIER TABLE */
+.tier-tbl{border-collapse:collapse;}
+.tier-tbl th{font-family:Arial,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--light);padding:4px 8px;}
+.tier-tbl td{padding:4px 6px;}
+
+/* 3-MONTH GRID */
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.mc{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.mc-h{padding:13px 16px;border-bottom:1px solid var(--border);}
+.mc-h.m0{background:var(--gold-bg);}
+.mc-h.m1{background:#F0F0F5;}
+.mc-h.m2{background:#F5F5EE;}
+.mc-label{font-family:Arial,sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--mid);}
+.mc-month{font-size:15px;font-weight:bold;margin-top:3px;}
+.mc-body{padding:14px 16px;}
+.mrow{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--border);font-family:Arial,sans-serif;font-size:11px;}
+.mrow:last-child{border-bottom:none;}
+.mrow .ml{color:var(--mid);}
+.mrow .mv{font-weight:bold;}
+.mc-total{margin-top:12px;padding-top:12px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end;}
+.mc-total .tl{font-family:Arial,sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mid);}
+.mc-total .tv{font-size:21px;font-weight:bold;}
+
+@media print{.no-print{display:none!important}body{background:#fff}html,body{height:auto;overflow:visible}.tab-panel{display:block!important;overflow:visible}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Dolcenola</h1>
+    <div class="sub">Pilotage Achats & Trésorerie</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    <button class="btn btn-out" style="color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.2);" onclick="exportDB()">⬇ Export</button>
+    <label class="btn btn-out" style="color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.2);cursor:pointer;">⬆ Import
+      <input type="file" accept=".json" style="display:none" onchange="importDB(event)"/>
+    </label>
+    <span id="sv-ind" style="font-family:Arial;font-size:10px;color:rgba(255,255,255,.4);display:none;">✓ Sauvegardé</span>
+  </div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('commandes')">📋 Commandes</button>
+  <button class="tab-btn" onclick="showTab('fournisseurs')">🏭 Fournisseurs</button>
+  <button class="tab-btn" onclick="showTab('bom')">⚙️ Consommables</button>
+  <button class="tab-btn" onclick="showTab('treso')">💰 Tréso 3 mois</button>
+</div>
+
+<div id="tab-commandes" class="tab-panel active"><div class="mw" id="c-zone"></div></div>
+<div id="tab-fournisseurs" class="tab-panel"><div class="mw" id="f-zone"></div></div>
+<div id="tab-bom" class="tab-panel"><div class="mw" id="b-zone"></div></div>
+<div id="tab-treso" class="tab-panel"><div class="mw" id="t-zone"></div></div>
+
+<script>
+'use strict';
+
+// ── DEFAULT DATA ─────────────────────────────────────────────────────────────
+const DEF_DB = {
+  suppliers:[
+    {id:'s1',name:'Antelogos',contact:'Yvette',delay:2,klarna:false,items:[
+      {id:'i1',name:'Affiche imprimée',delay:null,note:'',tiers:[{qty:100,price:1.83},{qty:250,price:1.468},{qty:500,price:1.092}]},
+      {id:'i2',name:'Cartes postales imprimées',delay:null,note:'',tiers:[{qty:192,price:0.391},{qty:576,price:0.302},{qty:1728,price:0.281}]},
+    ]},
+    {id:'s2',name:'Papeterie du Dauphiné',contact:'',delay:3,klarna:false,items:[
+      {id:'i3',name:'Carton affiches',delay:null,note:'',tiers:[{qty:2000,price:0.196},{qty:3000,price:0.191},{qty:5000,price:0.184}]},
+    ]},
+    {id:'s3',name:'Pays des enveloppes',contact:'',delay:5,klarna:false,items:[
+      {id:'i4',name:'Plastique affiche',delay:null,note:'',tiers:[{qty:100,price:0.26},{qty:1000,price:0.26},{qty:2000,price:0.23},{qty:5000,price:0.20}]},
+    ]},
+    {id:'s4',name:'RETIF',contact:'',delay:5,klarna:false,items:[
+      {id:'i5',name:'Sac plastique',delay:null,note:'',tiers:[{qty:100,price:0.158}]},
+    ]},
+    {id:'s5',name:'karton.eu',contact:'',delay:5,klarna:false,items:[
+      {id:'i6',name:'Enveloppe kraft',delay:null,note:'',tiers:[{qty:2000,price:0.0235},{qty:6000,price:0.0184},{qty:10000,price:0.0167}]},
+    ]},
+    {id:'s6',name:'T-shirt Nice',contact:'',delay:2,klarna:false,items:[
+      {id:'i7',name:'Pochettes S',delay:null,note:'',tiers:[{qty:100,price:1.53},{qty:200,price:1.42},{qty:350,price:1.38}]},
+    ]},
+    {id:'s7',name:'Alibaba',contact:'',delay:30,klarna:false,items:[
+      {id:'i8',name:'Support Motel Key',delay:24,note:'',tiers:[]},
+      {id:'i9',name:'Tote bag vierge',delay:38,note:'à confirmer',tiers:[]},
+      {id:'i10',name:'Magnets',delay:50,note:'à confirmer',tiers:[{qty:100,price:1.19},{qty:300,price:0.994},{qty:500,price:0.966}]},
+    ]},
+    {id:'s8',name:'MB Tech',contact:'',delay:3,klarna:false,items:[
+      {id:'i11',name:'Papier sublimation',delay:null,note:'',tiers:[{qty:200,price:0.058}]},
+    ]},
+    {id:'s9',name:'DTFCOM',contact:'',delay:3,klarna:false,items:[
+      {id:'i12',name:'Impression DTF',delay:null,note:'',tiers:[]},
+    ]},
+  ],
+  products:[
+    {id:'p1',name:'Affiches',icon:'🖼️',bom:[
+      {itemId:'i1',ratio:1},{itemId:'i3',ratio:1},{itemId:'i4',ratio:1},{itemId:'i5',ratio:1}
+    ]},
+    {id:'p2',name:'Cartes Postales',icon:'📮',bom:[
+      {itemId:'i2',ratio:1},{itemId:'i6',ratio:1}
+    ]},
+    {id:'p3',name:'Motel Key',icon:'🔑',bom:[
+      {itemId:'i8',ratio:1},{itemId:'i12',ratio:1}
+    ]},
+    {id:'p4',name:'Tote Bags',icon:'🛍️',bom:[
+      {itemId:'i9',ratio:1},{itemId:'i11',ratio:1}
+    ]},
+    {id:'p5',name:'Magnets',icon:'🧲',bom:[
+      {itemId:'i10',ratio:1},{itemId:'i6',ratio:1}
+    ]},
+    {id:'p6',name:'Pochettes',icon:'👜',bom:[
+      {itemId:'i7',ratio:1}
+    ]},
+  ]
+};
+
+const DEF_PLAN = {
+  treso:2779.75,
+  date:'2026-05-14',
+  revenue:{'M':12840,'M+1':20983,'M+2':31890,'M+3':0,'M+4':0,'M+5':0},
+  charges:670,
+  qty:{}, stock:{}, override:{}, payMonth:{}, klarna:{}
+};
+
+let DB   = JSON.parse(JSON.stringify(DEF_DB));
+let plan = JSON.parse(JSON.stringify(DEF_PLAN));
+
+// ── PERSISTENCE ───────────────────────────────────────────────────────────────
+const SK='dolcenola_erp_v2';
+function save(){
+  try{
+    localStorage.setItem(SK,JSON.stringify({DB,plan}));
+    const el=document.getElementById('sv-ind');
+    el.style.display='inline';clearTimeout(el._t);
+    el._t=setTimeout(()=>el.style.display='none',1600);
+  }catch(e){}
+}
+function loadLS(){
+  try{
+    const r=localStorage.getItem(SK);if(!r)return;
+    const d=JSON.parse(r);
+    if(d.DB)DB=d.DB;
+    if(d.plan){
+      plan={...DEF_PLAN,...d.plan};
+      // migrate ancien format month→date
+      if(!plan.date&&plan.month)plan.date=plan.month+'-01';
+      // s'assurer que les 6 mois de CA existent
+      ['M','M+1','M+2','M+3','M+4','M+5'].forEach(k=>{if(plan.revenue[k]==null)plan.revenue[k]=0;});
+    }
+  }catch(e){}
+}
+function exportDB(){
+  const b=new Blob([JSON.stringify({DB,plan,_d:new Date().toISOString().slice(0,10)},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`dolcenola_${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function importDB(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.DB)DB=d.DB;if(d.plan)plan={...DEF_PLAN,...d.plan};save();renderActive();}catch(err){alert('Fichier invalide');}};
+  r.readAsText(f);
+}
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+function fmt(n,d=2){if(n==null||isNaN(n))return'—';return n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d})+' €';}
+function fmtN(n){return Math.round(n).toLocaleString('fr-FR');}
+function fmtDate(d){return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+
+function planDate(){
+  const d=new Date(plan.date||'2026-05-01');d.setHours(0,0,0,0);return d;
+}
+function deliveryDate(delayDays){
+  const d=planDate();d.setDate(d.getDate()+delayDays);return d;
+}
+function mLabel(off){
+  const d=planDate();
+  const d2=new Date(d.getFullYear(),d.getMonth()+off,1);
+  return d2.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+}
+function mShort(off){return mLabel(off).split(' ')[0];}
+function mKey(off){return off===0?'M':`M+${off}`;}
+
+function orderByDate(delayDays){
+  const d=planDate();
+  const nb=new Date(d.getFullYear(),d.getMonth(),1);
+  nb.setDate(nb.getDate()-delayDays);return nb;
+}
+
+function getStatus(obd,toOrder){
+  if(toOrder<=0)return{label:'✓ Stock OK',cls:'b-light',pri:-1};
+  const diff=Math.ceil((obd-TODAY)/86400000);
+  if(diff<0)return{label:`EN RETARD ${Math.abs(diff)}j`,cls:'b-red',pri:3};
+  if(diff===0)return{label:'COMMANDER AUJ.',cls:'b-red',pri:3};
+  if(diff<=5)return{label:`URGENT — ${diff}j`,cls:'b-orange',pri:2};
+  if(diff<=14)return{label:`Attention — ${diff}j`,cls:'b-yellow',pri:1};
+  return{label:`OK — ${diff}j`,cls:'b-green',pri:0};
+}
+
+function getTier(tiers,qty){
+  if(!tiers||!tiers.length||qty<=0)return null;
+  const s=[...tiers].sort((a,b)=>a.qty-b.qty);
+  let t=null;for(const x of s){if(qty>=x.qty)t=x;}return t;
+}
+function getMinTier(tiers){
+  if(!tiers||!tiers.length)return null;
+  return[...tiers].sort((a,b)=>a.qty-b.qty)[0];
+}
+
+function findSup(id){return DB.suppliers.find(s=>s.id===id);}
+function findItemGlobal(itemId){
+  for(const s of DB.suppliers){const it=s.items.find(i=>i.id===itemId);if(it)return{item:it,sup:s};}
+  return null;
+}
+function findProd(id){return DB.products.find(p=>p.id===id);}
+
+// ── CORE: GENERATE CONSOLIDATED ORDERS ───────────────────────────────────────
+function genOrders(){
+  const needs={};
+  for(const prod of DB.products){
+    const qty=plan.qty[prod.id]||0;if(!qty)continue;
+    for(const{itemId,ratio}of prod.bom){
+      if(!needs[itemId])needs[itemId]={total:0,sources:[]};
+      const n=Math.ceil(qty*ratio);
+      needs[itemId].total+=n;
+      needs[itemId].sources.push({icon:prod.icon,name:prod.name,qty:n});
+    }
+  }
+  return Object.entries(needs).map(([itemId,data])=>{
+    const found=findItemGlobal(itemId);if(!found)return null;
+    const{item,sup}=found;
+    const stock=plan.stock[itemId]||0;
+    const ov=plan.override[itemId]??null;
+    const autoQty=Math.max(0,data.total-stock);
+    const toOrder=ov!==null?ov:autoQty;
+    const tier=getTier(item.tiers,toOrder);
+    const minTier=getMinTier(item.tiers);
+    const unitPrice=tier?tier.price:null;
+    const total=unitPrice!=null?unitPrice*toOrder:null;
+    const delay=item.delay??sup.delay??5;
+    const obd=orderByDate(delay);
+    const status=getStatus(obd,toOrder);
+    const payM=plan.payMonth[itemId]||'M';
+    const useK=!!(plan.klarna[itemId]&&sup.klarna);
+    return{itemId,item,sup,totalNeeded:data.total,sources:data.sources,stock,autoQty,toOrder,ov,tier,minTier,unitPrice,total,delay,obd,status,payM,useK};
+  }).filter(Boolean);
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+let activeTab='commandes';
+const RENDERS={commandes:renderCommandes,fournisseurs:renderFournisseurs,bom:renderBOM,treso:renderTreso};
+
+function showTab(id){
+  activeTab=id;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['commandes','fournisseurs','bom','treso'][i]===id);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  RENDERS[id]?.();
+}
+function renderActive(){RENDERS[activeTab]?.();}
+function xRender(...tabs){tabs.forEach(t=>{if(t===activeTab)RENDERS[t]?.();});}
+
+// ── TAB: COMMANDES ───────────────────────────────────────────────────────────
+function renderCommandes(){
+  const orders=genOrders();
+  let html=`
+  <div class="card no-print">
+    <div class="ct">Paramètres</div>
+    <div class="row">
+      <div class="field"><label class="lbl">Date de référence (JJ/MM/AAAA)</label>
+        <input type="date" value="${esc(plan.date||'')}" onchange="plan.date=this.value;save();renderActive();"/>
+      </div>
+      <div class="field"><label class="lbl">Tréso disponible (€)</label>
+        <input type="number" class="md" value="${plan.treso}" step="0.01" oninput="plan.treso=parseFloat(this.value)||0;save();"/>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:flex-end;">
+        <button class="btn btn-out btn-sm" onclick="window.print()">🖨 Imprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Produits — Quantités à acheter</div>`;
+
+  for(const prod of DB.products){
+    const qty=plan.qty[prod.id]||0;
+    const consStr=prod.bom.map(({itemId,ratio})=>{
+      const f=findItemGlobal(itemId);
+      return f?`<span class="src-tag">${f.item.name}${ratio!==1?' ×'+ratio:''}</span>`:'';
+    }).join('');
+    html+=`
+    <div class="pa">
+      <div class="pa-h">
+        <div class="pa-name">${prod.icon} ${prod.name}</div>
+        <div class="pa-qty">
+          <label class="lbl">Qté à acheter :</label>
+          <input type="number" value="${qty}" min="0" step="1" style="width:140px;padding:5px 9px;font-size:13px;"
+            oninput="plan.qty['${prod.id}']=parseInt(this.value)||0;save();"
+            onblur="renderCommandes();"/>
+          <span class="text-mid">u.</span>
+          <span style="font-size:18px;cursor:pointer;margin-left:6px;" onclick="this.parentElement.parentElement.nextElementSibling.classList.toggle('open')">›</span>
+        </div>
+      </div>
+      <div class="pa-body">
+        <div style="font-size:11px;color:var(--mid);padding:4px 0;">Consommables : ${consStr||'—'}</div>
+      </div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // Consolidated orders
+  html+=`<div class="card"><div class="ct">Bons de commande consolidés</div>`;
+  if(!orders.length){
+    html+=`<div style="text-align:center;padding:28px;font-size:12px;color:var(--light);">Renseignez les quantités ci-dessus pour générer les commandes.</div>`;
+  }else{
+    let grand=0;
+    html+=`<div style="overflow-x:auto;"><table class="tbl">
+    <thead><tr>
+      <th>Consommable</th><th>Provenance</th>
+      <th class="r">À commander</th>
+      <th>Fournisseur</th><th>Délai</th>
+      <th class="r">Prix/u.</th><th class="r">Total</th>
+      <th style="text-align:center">Klarna</th>
+      <th class="r">Mensualité</th>
+    </tr></thead><tbody>`;
+
+    for(const o of orders){
+      const srcs=o.sources.map(s=>`<span class="src-tag">${s.icon} ${s.name} (${fmtN(s.qty)})</span>`).join('');
+
+      // Colonne "À commander" : affiche toOrder (reflète l'override si actif)
+      let qteC;
+      if(!o.item.tiers.length){
+        qteC=`<span class="text-light" style="font-size:10px;">—</span>`;
+      }else if(o.toOrder===0&&o.totalNeeded===0){
+        qteC=`<span class="text-light">—</span>`;
+      }else{
+        qteC=`<strong style="font-size:14px;">${fmtN(o.toOrder||o.totalNeeded)}</strong>`;
+        if(o.ov!==null){
+          // override actif : afficher le palier sélectionné + bouton reset
+          qteC+=`<br><span style="font-size:9px;color:var(--mid);">Palier ${o.ov>0?fmtN(o.ov):'auto'}</span>`;
+          qteC+=` <button class="btn btn-sm btn-out" title="Revenir au calcul auto" onclick="plan.override['${o.itemId}']=null;save();renderCommandes();">↺</button>`;
+        }else if(o.minTier&&o.toOrder>0&&o.toOrder<o.minTier.qty){
+          // en dessous du seuil min : proposer de passer au seuil
+          qteC+=`<br><button class="btn btn-out btn-sm" style="margin-top:4px;" onclick="plan.override['${o.itemId}']=${o.minTier.qty};save();renderCommandes();">→ Passer à ${fmtN(o.minTier.qty)}</button>`;
+        }else if(o.tier){
+          qteC+=`<br><span style="font-size:9px;color:var(--mid);">Palier ${fmtN(o.tier.qty)}</span>`;
+        }
+      }
+
+      let priceC,totalC;
+      if(!o.item.tiers.length){
+        priceC=`<span class="text-light" style="font-size:10px;">À renseigner<br>dans Fournisseurs</span>`;
+        totalC='—';
+      }else if(o.toOrder===0){
+        priceC=`<span class="text-light">—</span>`;
+        totalC=`<span class="g">—</span>`;
+      }else if(!o.tier&&o.minTier){
+        priceC=`<span class="warn-txt">Min. ${fmtN(o.minTier.qty)} u.</span>`;
+        totalC=`<span class="warn-txt">Ajuster qty</span>`;
+      }else{
+        priceC=o.unitPrice!=null?`${o.unitPrice.toLocaleString('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:4})} €`:'—';
+        totalC=o.total!=null?fmt(o.total):'—';
+        if(o.total)grand+=o.total;
+      }
+
+      const klarnaCtrl=o.sup.klarna
+        ?`<label class="toggle"><input type="checkbox" ${o.useK?'checked':''} onchange="plan.klarna['${o.itemId}']=this.checked;save();xRender('commandes','treso');"><span class="tslider"></span></label>`
+        :'<span class="text-light">—</span>';
+
+      // Mensualité : toujours affichée
+      let mens='—';
+      if(o.total){
+        if(o.useK){
+          mens=`${fmt(o.total/3)} <span class="text-light" style="font-size:9px;">× 3</span>`;
+        }else{
+          mens=`${fmt(o.total)} <span class="text-light" style="font-size:9px;">× 1</span>`;
+        }
+      }
+
+      const delivStr=fmtDate(deliveryDate(o.delay));
+
+      html+=`<tr>
+        <td><strong>${o.item.name}</strong>${o.item.note?`<br><span class="text-light">${esc(o.item.note)}</span>`:''}</td>
+        <td style="max-width:180px;">${srcs}</td>
+        <td class="r">${qteC}</td>
+        <td><div style="font-weight:600;">${esc(o.sup.name)}</div></td>
+        <td>
+          <strong style="font-size:13px;">${o.delay}j</strong>
+          <div style="font-size:10px;"><strong style="color:var(--red);">Livraison ${delivStr}</strong></div>
+        </td>
+        <td class="r">${priceC}</td>
+        <td class="r" style="font-weight:bold;">${totalC}</td>
+        <td style="text-align:center;">${klarnaCtrl}</td>
+        <td class="r">${mens}</td>
+      </tr>`;
+    }
+    html+=`</tbody><tfoot><tr class="tfoot-row">
+      <td colspan="6" style="text-align:right;letter-spacing:1px;">TOTAL ESTIMÉ</td>
+      <td class="r">${fmt(grand)}</td><td colspan="2"></td>
+    </tr></tfoot></table></div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('c-zone').innerHTML=html;
+}
+
+// ── TAB: FOURNISSEURS ────────────────────────────────────────────────────────
+let openSupId=null;
+
+function renderFournisseurs(){
+  let html=`<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div class="ct" style="margin:0;">Référentiel Fournisseurs</div>
+    <button class="btn btn-gold btn-sm" onclick="addSup()">+ Ajouter un fournisseur</button>
+  </div>`;
+
+  for(const sup of DB.suppliers){
+    const isOpen=openSupId===sup.id;
+    html+=`
+    <div class="sr">
+      <div class="sr-h" onclick="toggleSup('${sup.id}')">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;">
+          <div class="sr-name">${esc(sup.name)}</div>
+          ${sup.contact?`<span class="text-mid">· ${esc(sup.contact)}</span>`:''}
+          <span class="badge b-light">${sup.delay}j</span>
+          ${sup.klarna?'<span class="badge b-klarna">Klarna ✓</span>':''}
+          <span class="text-light">${sup.items.length} article${sup.items.length>1?'s':''}</span>
+        </div>
+        <div class="btn-row" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-danger" onclick="delSup('${sup.id}')">Supprimer</button>
+          <span style="color:var(--light);font-size:16px;">${isOpen?'▲':'▼'}</span>
+        </div>
+      </div>
+      <div class="sr-body ${isOpen?'open':''}">
+        <div class="row" style="margin-bottom:14px;">
+          <div class="field"><label class="lbl">Nom</label>
+            <input type="text" value="${esc(sup.name)}" oninput="upSup('${sup.id}','name',this.value)"/></div>
+          <div class="field"><label class="lbl">Contact</label>
+            <input type="text" class="md" value="${esc(sup.contact||'')}" oninput="upSup('${sup.id}','contact',this.value)"/></div>
+          <div class="field"><label class="lbl">Délai défaut (j)</label>
+            <input type="number" class="sm" value="${sup.delay}" min="1" oninput="upSup('${sup.id}','delay',parseInt(this.value)||1)"/></div>
+          <div class="field"><label class="lbl">Klarna dispo</label>
+            <label class="toggle" style="margin-top:6px;"><input type="checkbox" ${sup.klarna?'checked':''} onchange="upSup('${sup.id}','klarna',this.checked)"><span class="tslider"></span></label></div>
+        </div>
+        <hr class="sep">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span class="lbl">Articles & Grilles tarifaires</span>
+          <button class="btn btn-out btn-sm" onclick="addItem('${sup.id}')">+ Ajouter un article</button>
+        </div>
+        ${sup.items.map(item=>renderItemBox(sup,item)).join('')}
+      </div>
+    </div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('f-zone').innerHTML=html;
+}
+
+function renderItemBox(sup,item){
+  const tiers=item.tiers||[];
+  let tiersHtml=`<table class="tier-tbl" style="margin-top:8px;">
+    <tr><th>Seuil min. (unités)</th><th>Prix / u. (€)</th><th></th></tr>`;
+  tiers.forEach((t,i)=>{
+    tiersHtml+=`<tr>
+      <td><input type="number" value="${t.qty}" min="1" style="width:110px;padding:4px 7px;font-size:12px;" oninput="upTier('${sup.id}','${item.id}',${i},'qty',parseInt(this.value)||1)"/></td>
+      <td><input type="number" value="${t.price}" min="0" step="0.0001" style="width:100px;padding:4px 7px;font-size:12px;" oninput="upTier('${sup.id}','${item.id}',${i},'price',parseFloat(this.value)||0)"/></td>
+      <td><button class="btn btn-sm btn-danger" onclick="rmTier('${sup.id}','${item.id}',${i})">✕</button></td>
+    </tr>`;
+  });
+  tiersHtml+=`<tr><td colspan="3" style="padding-top:6px;">
+    <button class="btn btn-sm btn-out" onclick="addTier('${sup.id}','${item.id}')">+ Ajouter un seuil</button>
+  </td></tr></table>`;
+
+  return`<div class="item-box">
+    <div class="row" style="margin-bottom:8px;">
+      <div class="field" style="flex:1;"><label class="lbl">Nom de l'article</label>
+        <input type="text" value="${esc(item.name)}" oninput="upItem('${sup.id}','${item.id}','name',this.value)"/></div>
+      <div class="field"><label class="lbl">Délai spécifique (j)</label>
+        <input type="number" class="sm" placeholder="${sup.delay}" value="${item.delay??''}"
+          oninput="upItem('${sup.id}','${item.id}','delay',this.value===''?null:parseInt(this.value))"/></div>
+      <div class="field"><label class="lbl">Note</label>
+        <input type="text" value="${esc(item.note||'')}" placeholder="ex: à confirmer"
+          oninput="upItem('${sup.id}','${item.id}','note',this.value)"/></div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn btn-sm btn-danger" onclick="delItem('${sup.id}','${item.id}')">Supprimer</button>
+      </div>
+    </div>
+    ${tiersHtml}
+  </div>`;
+}
+
+// Supplier CRUD
+function toggleSup(id){openSupId=openSupId===id?null:id;renderFournisseurs();}
+function addSup(){const id='s'+Date.now();DB.suppliers.push({id,name:'Nouveau fournisseur',contact:'',delay:5,klarna:false,items:[]});openSupId=id;save();renderFournisseurs();}
+function delSup(id){if(!confirm('Supprimer ce fournisseur ?'))return;DB.suppliers=DB.suppliers.filter(s=>s.id!==id);save();renderFournisseurs();}
+function upSup(id,k,v){const s=findSup(id);if(s){s[k]=v;save();}}
+
+// Item CRUD
+function addItem(sid){const s=findSup(sid);if(!s)return;const id='i'+Date.now();s.items.push({id,name:'Nouvel article',delay:null,note:'',tiers:[]});save();renderFournisseurs();}
+function delItem(sid,iid){const s=findSup(sid);if(!s)return;s.items=s.items.filter(i=>i.id!==iid);for(const p of DB.products)p.bom=p.bom.filter(b=>b.itemId!==iid);save();renderFournisseurs();}
+function upItem(sid,iid,k,v){const s=findSup(sid);if(!s)return;const it=s.items.find(i=>i.id===iid);if(it){it[k]=v;save();}}
+
+// Tier CRUD
+function addTier(sid,iid){const s=findSup(sid);if(!s)return;const it=s.items.find(i=>i.id===iid);if(it){it.tiers.push({qty:100,price:0});save();renderFournisseurs();}}
+function rmTier(sid,iid,idx){const s=findSup(sid);if(!s)return;const it=s.items.find(i=>i.id===iid);if(it){it.tiers.splice(idx,1);save();renderFournisseurs();}}
+function upTier(sid,iid,idx,k,v){const s=findSup(sid);if(!s)return;const it=s.items.find(i=>i.id===iid);if(it){it.tiers[idx][k]=v;save();}}
+
+// ── TAB: BOM ─────────────────────────────────────────────────────────────────
+function renderBOM(){
+  const allItems=[];
+  for(const s of DB.suppliers)for(const it of s.items)allItems.push({id:it.id,label:`${it.name} — ${s.name}`});
+
+  let html=`<div class="card">
+  <div class="ct">Paramétrage Consommables par Produit</div>
+  <p class="text-mid" style="margin-bottom:16px;">Définissez quels consommables sont nécessaires pour chaque produit, et en quelle quantité. Les consommables partagés entre plusieurs produits seront agrégés automatiquement dans Commandes.</p>`;
+
+  for(const prod of DB.products){
+    const opts=allItems.map(i=>`<option value="${i.id}">${esc(i.label)}</option>`).join('');
+    html+=`
+    <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:14px;overflow:hidden;">
+      <div style="background:var(--gold-bg);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="font-size:15px;font-weight:bold;">${prod.icon} ${prod.name}</div>
+        <div class="btn-row">
+          <input type="text" value="${esc(prod.name)}" style="width:130px;font-size:12px;padding:5px 8px;" oninput="upProd('${prod.id}','name',this.value)"/>
+          <button class="btn btn-sm btn-danger" onclick="delProd('${prod.id}')">Supprimer</button>
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <table class="tbl" style="margin-bottom:10px;">
+          <thead><tr><th>Consommable</th><th>Fournisseur</th><th class="r">Ratio (qté/unité produit)</th><th></th></tr></thead>
+          <tbody>`;
+    for(const{itemId,ratio}of prod.bom){
+      const f=findItemGlobal(itemId);if(!f)continue;
+      html+=`<tr>
+        <td>${esc(f.item.name)}</td>
+        <td class="text-mid">${esc(f.sup.name)}</td>
+        <td class="r"><input class="sm" type="number" value="${ratio}" min="0.01" step="0.01" style="width:70px;"
+          oninput="upBOM('${prod.id}','${itemId}',parseFloat(this.value)||1)"/></td>
+        <td><button class="btn btn-sm btn-danger" onclick="rmBOM('${prod.id}','${itemId}')">✕</button></td>
+      </tr>`;
+    }
+    html+=`</tbody></table>
+        <div class="row" style="align-items:flex-end;">
+          <div class="field" style="flex:1;"><label class="lbl">Ajouter un consommable</label>
+            <select id="ba-${prod.id}"><option value="">— Choisir —</option>${opts}</select></div>
+          <button class="btn btn-out btn-sm" onclick="addBOM('${prod.id}')">+ Ajouter</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html+=`<hr class="sep">
+  <div class="row" style="align-items:flex-end;">
+    <div class="field" style="flex:1;"><label class="lbl">Nom du nouveau produit</label>
+      <input type="text" id="np-name" placeholder="ex: Stickers"/></div>
+    <button class="btn btn-gold btn-sm" onclick="addProd()">+ Ajouter un produit</button>
+  </div></div>`;
+
+  document.getElementById('b-zone').innerHTML=html;
+}
+
+function addProd(){const n=document.getElementById('np-name').value.trim();if(!n)return;DB.products.push({id:'p'+Date.now(),name:n,icon:'📦',bom:[]});save();renderBOM();}
+function delProd(id){if(!confirm('Supprimer ce produit ?'))return;DB.products=DB.products.filter(p=>p.id!==id);save();renderBOM();}
+function upProd(id,k,v){const p=findProd(id);if(p){p[k]=v;save();}}
+function addBOM(pid){const sel=document.getElementById('ba-'+pid);const iid=sel.value;if(!iid)return;const p=findProd(pid);if(!p||p.bom.find(b=>b.itemId===iid))return;p.bom.push({itemId:iid,ratio:1});save();renderBOM();}
+function rmBOM(pid,iid){const p=findProd(pid);if(p){p.bom=p.bom.filter(b=>b.itemId!==iid);save();renderBOM();}}
+function upBOM(pid,iid,r){const p=findProd(pid);if(p){const b=p.bom.find(x=>x.itemId===iid);if(b){b.ratio=r;save();}}}
+
+// ── DRAG & DROP TRÉSO ────────────────────────────────────────────────────────
+let _dId=null,_dInst=null;
+function _tDrag(ev,id,inst){
+  _dId=id;_dInst=inst!=null?inst:null;
+  ev.dataTransfer.effectAllowed='move';
+  ev.currentTarget.style.opacity='0.5';
+}
+function _tDragEnd(ev){ev.currentTarget.style.opacity='';}
+function _tOver(ev){ev.preventDefault();ev.dataTransfer.dropEffect='move';}
+function _tDrop(ev,tkey){
+  ev.preventDefault();
+  if(!_dId)return;
+  const mk=['M','M+1','M+2','M+3','M+4','M+5'];
+  const ti=mk.indexOf(tkey);
+  if(_dInst!==null){
+    // Klarna : déplacer les 3 mensualités ensemble
+    const newSi=Math.max(0,Math.min(mk.length-3,ti-_dInst));
+    plan.payMonth[_dId]=mk[newSi];
+  }else{
+    plan.payMonth[_dId]=tkey;
+  }
+  save();renderTreso();
+  _dId=null;_dInst=null;
+}
+
+// ── TAB: TRÉSO 6 MOIS ────────────────────────────────────────────────────────
+function renderTreso(){
+  const orders=genOrders();
+  const mkeys=['M','M+1','M+2','M+3','M+4','M+5'];
+  const charges=plan.charges??670;
+
+  // Params card — CA sur 2 lignes de 3 pour ne pas déborder
+  let html=`<div class="card">
+  <div class="ct">Paramètres</div>
+  <div class="row" style="margin-bottom:10px;">
+    <div class="field"><label class="lbl">Tréso de départ (€)</label>
+      <input type="number" class="md" value="${plan.treso}" step="0.01"
+        oninput="plan.treso=parseFloat(this.value)||0;save();"
+        onblur="renderTreso();"/></div>
+    <div class="field"><label class="lbl">Charges fixes / mois (€)</label>
+      <input type="number" class="md" value="${charges}" step="10"
+        oninput="plan.charges=parseFloat(this.value)||0;save();"
+        onblur="renderTreso();"/></div>
+  </div>
+  <div class="row">
+    ${mkeys.map((k,i)=>`
+    <div class="field"><label class="lbl">CA — ${k} (${mShort(i)})</label>
+      <input type="number" class="md" value="${plan.revenue[k]||0}" step="100"
+        oninput="plan.revenue['${k}']=parseFloat(this.value)||0;save();"
+        onblur="renderTreso();"/></div>`).join('')}
+  </div></div>`;
+
+  // Matrix table — colonnes : Commande/Charge | Qté | Date livraison | M…M+5
+  const colspan=mkeys.length+3;
+  html+=`<div class="card" style="overflow-x:auto;">
+  <div class="ct">Tableau de trésorerie — cliquez sur une cellule pour affecter le mois de paiement</div>
+  <table class="tbl" style="min-width:900px;">
+    <thead><tr>
+      <th style="min-width:180px;">Commande / Charge</th>
+      <th class="r" style="min-width:80px;">Qté</th>
+      <th style="min-width:110px;">Livraison est.</th>
+      ${mkeys.map((k,i)=>`<th class="r" style="min-width:110px;">${k}<br><span style="font-weight:400;font-size:9px;text-transform:none;letter-spacing:0;">${mLabel(i)}</span></th>`).join('')}
+    </tr></thead>
+    <tbody>`;
+
+  // Fixed charges row (pas de Qté ni Date livraison)
+  html+=`<tr style="background:var(--red-bg);">
+    <td><strong>🏠 Charges fixes</strong><div style="font-size:9px;color:var(--mid);margin-top:1px;">Loyers, abonnements…</div></td>
+    <td class="r" style="color:var(--mid);font-size:11px;">—</td>
+    <td style="color:var(--mid);font-size:11px;">mensuel</td>
+    ${mkeys.map(()=>`<td class="r" style="color:var(--red);font-weight:bold;font-size:12px;">− ${fmt(charges)}</td>`).join('')}
+  </tr>`;
+
+  // Order rows
+  const activeOrders=orders.filter(o=>o.total&&o.toOrder>0);
+  if(!activeOrders.length){
+    html+=`<tr><td colspan="${colspan}" style="text-align:center;padding:18px;font-size:11px;color:var(--light);">Renseignez des quantités dans l'onglet Commandes pour voir les flux.</td></tr>`;
+  }else{
+    for(const o of activeOrders){
+      const srcs=o.sources.map(s=>`${s.icon} ${s.name}`).join(' + ');
+      const deliv=deliveryDate(o.delay);
+      const delivStr=fmtDate(deliv);
+      // Determine which mkey the delivery month falls into
+      const pd=planDate();
+      const delivMonthOff=Math.round((new Date(deliv.getFullYear(),deliv.getMonth(),1)-new Date(pd.getFullYear(),pd.getMonth(),1))/(1000*60*60*24*30));
+      const delivMkey=delivMonthOff>=0&&delivMonthOff<6?mkeys[delivMonthOff]:null;
+
+      // Qty commandée = somme des sources (toOrder est la qté consolidée)
+      const qtyAffiche=fmtN(o.toOrder);
+
+      let cells='';
+      if(o.useK){
+        const si=mkeys.indexOf(o.payM);
+        const inst=o.total/3;
+        cells=mkeys.map((k,i)=>{
+          const instIdx=i-si;
+          if(instIdx>=0&&instIdx<=2){
+            return`<td class="r" style="background:var(--red-bg);color:var(--red);font-weight:bold;cursor:grab;font-size:12px;user-select:none;"
+              draggable="true"
+              ondragstart="_tDrag(event,'${o.itemId}',${instIdx})"
+              ondragend="_tDragEnd(event)"
+              ondragover="_tOver(event)"
+              ondrop="_tDrop(event,'${k}')"
+              onclick="plan.payMonth['${o.itemId}']='${k}';save();renderTreso();"
+              title="Glisser pour déplacer les 3 mensualités Klarna">
+              − ${fmt(inst)}<br><span style="font-size:9px;font-weight:400;color:var(--mid);">Klarna ${instIdx+1}/3</span></td>`;
+          }
+          return`<td class="r treso-cell" style="cursor:copy;color:var(--border);"
+            ondragover="_tOver(event)"
+            ondrop="_tDrop(event,'${k}')"
+            onclick="plan.payMonth['${o.itemId}']='${k}';save();renderTreso();"
+            title="Déposer ici">·</td>`;
+        }).join('');
+      }else{
+        cells=mkeys.map((k)=>{
+          if(o.payM===k){
+            return`<td class="r" style="background:var(--red-bg);color:var(--red);font-weight:bold;cursor:grab;font-size:12px;user-select:none;"
+              draggable="true"
+              ondragstart="_tDrag(event,'${o.itemId}',null)"
+              ondragend="_tDragEnd(event)"
+              ondragover="_tOver(event)"
+              ondrop="_tDrop(event,'${k}')"
+              onclick="plan.payMonth['${o.itemId}']='${k}';save();renderTreso();">
+              − ${fmt(o.total)}</td>`;
+          }
+          return`<td class="r treso-cell" style="cursor:copy;color:var(--border);"
+            ondragover="_tOver(event)"
+            ondrop="_tDrop(event,'${k}')"
+            onclick="plan.payMonth['${o.itemId}']='${k}';save();renderTreso();"
+            title="Déposer ici">·</td>`;
+        }).join('');
+      }
+      html+=`<tr>
+        <td>
+          <strong style="font-size:12px;">${esc(o.item.name)}</strong>
+          <div style="font-size:9px;color:var(--mid);margin-top:2px;">${esc(o.sup.name)} · ${srcs}</div>
+          ${o.useK?`<span class="badge b-klarna" style="margin-top:2px;display:inline-block;">Klarna × 3</span>`:''}
+        </td>
+        <td class="r" style="font-weight:bold;">${qtyAffiche}</td>
+        <td>
+          <strong style="color:#fff;font-size:12px;background:var(--green);border-radius:4px;padding:1px 6px;">${delivStr}</strong>
+          <div style="font-size:9px;color:var(--mid);">Délai ${o.delay}j</div>
+          ${delivMkey?`<span class="badge b-light" style="margin-top:2px;display:inline-block;font-size:8px;">${delivMkey}</span>`:''}
+        </td>
+        ${cells}
+      </tr>`;
+    }
+  }
+
+  // Compute totals for 6 months
+  const totOut={};
+  mkeys.forEach(k=>totOut[k]=charges);
+  for(const o of activeOrders){
+    if(o.useK){
+      const si=mkeys.indexOf(o.payM);
+      const inst=o.total/3;
+      for(let i=0;i<3;i++){const mi=si+i;if(mi<mkeys.length)totOut[mkeys[mi]]+=inst;}
+    }else{
+      totOut[o.payM]=(totOut[o.payM]||0)+o.total;
+    }
+  }
+
+  const revRow=mkeys.map((k)=>`<td class="r" style="color:var(--green);">+ ${fmt(plan.revenue[k]||0)}</td>`).join('');
+  const outRow=mkeys.map((k)=>`<td class="r" style="color:var(--red);">− ${fmt(totOut[k]||0)}</td>`).join('');
+  const soldes=mkeys.map((k)=>(plan.revenue[k]||0)-(totOut[k]||0));
+  const soldeRow=soldes.map((s)=>`<td class="r" style="font-weight:bold;color:${s>=0?'var(--green)':'var(--red)'};">${s>=0?'+':''}${fmt(s)}</td>`).join('');
+  let running=plan.treso;
+  const tresoRow=mkeys.map((_,i)=>{
+    running+=soldes[i];
+    const c=running<0?'var(--red)':running<2000?'var(--orange)':'var(--green)';
+    return`<td class="r" style="font-size:14px;font-weight:bold;color:${c};">${fmt(running)}</td>`;
+  }).join('');
+
+  html+=`</tbody>
+    <tfoot>
+      <tr class="tfoot-row"><td colspan="3" style="text-align:right;letter-spacing:.5px;">CA prévu</td>${revRow}</tr>
+      <tr class="tfoot-row"><td colspan="3" style="text-align:right;letter-spacing:.5px;">Total sorties</td>${outRow}</tr>
+      <tr class="tfoot-row"><td colspan="3" style="text-align:right;letter-spacing:.5px;">Solde mensuel</td>${soldeRow}</tr>
+      <tr class="tfoot-row"><td colspan="3" style="text-align:right;letter-spacing:.5px;">Tréso cumulée</td>${tresoRow}</tr>
+    </tfoot>
+  </table></div>`;
+
+  document.getElementById('t-zone').innerHTML=html;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadLS();
+showTab('commandes');
+</script>
+</body>
+</html>
